@@ -216,5 +216,14 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# netwatch: private data
+*.db
+*.sqlite
+*.sqlite3
+*.pcap
+*.pcapng
+config.ini
+secrets.*
+
 # Streamlit
 .streamlit/secrets.toml
