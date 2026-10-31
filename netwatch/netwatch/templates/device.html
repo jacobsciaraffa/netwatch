@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ d.label or d.mac }} · netwatch{% endblock %}
+{% block refresh %}{% endblock %}
+{% block body %}
+<section>
+  <h2>{{ d.label or d.mac }}</h2>
+  <p class="muted mono">{{ d.mac }} · {{ d.ip }} · first seen {{ d.first_seen|when }} · last seen {{ d.last_seen|ago }}</p>
+  <form method="post" action="{{ url_for('set_label', mac=d.mac) }}">
+    <input type="text" name="label" value="{{ d.label or '' }}" placeholder="Name this device, e.g. Living room TV" aria-label="Device name" size="32">
+    <button>Save name</button>
+  </form>
+</section>
+
+<section>
+  <h2>Servers it connects to</h2>
+  {% if not dests %}<p class="empty">None recorded yet.</p>{% else %}
+  <div class="scroll"><table>
+    <tr><th>Destination</th><th>Port</th><th>First seen</th><th></th></tr>
+    {% for t in dests %}
+    <tr>
+      <td class="mono">{{ t.dest }}</td><td>{{ t.port }}/{{ t.proto }}</td><td class="muted">{{ t.first_seen|when }}</td>
+      <td>{% if t.raw_ip %}<span class="tag">no DNS lookup</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>{% endif %}
+</section>
+
+<section>
+  <h2>Domains it has looked up</h2>
+  {% if not domains %}<p class="empty">None recorded yet.</p>{% else %}
+  <div class="scroll"><table>
+    <tr><th>Domain</th><th>First seen</th></tr>
+    {% for s in domains %}<tr><td class="mono">{{ s.domain }}</td><td class="muted">{{ s.first_seen|when }}</td></tr>{% endfor %}
+  </table></div>{% endif %}
+</section>
+
+<section>
+  <h2>Recent alerts</h2>
+  {% if not alerts %}<p class="empty">No alerts for this device.</p>{% else %}
+  <table>
+    {% for a in alerts %}
+    <tr class="{{ 'acked' if a.acked }}"><td style="white-space:nowrap"><span class="dot {{ a.severity }}"></span><span class="muted">{{ a.ts|when }}</span></td><td>{{ a.message }}</td></tr>
+    {% endfor %}
+  </table>{% endif %}
+</section>
+<p><a href="{{ url_for('index') }}">Back to overview</a></p>
+{% endblock %}

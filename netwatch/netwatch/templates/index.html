@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block status %}
+  <span class="pill {{ 'live' if not status.learning }}">{{ status.text }}</span>
+  <span class="pill">{{ devices|length }} devices</span>
+  <span class="pill">{{ unacked }} open alerts</span>
+{% endblock %}
+{% block body %}
+
+<section>
+  <h2>Alerts in the last 7 days</h2>
+  <div class="bars">
+    {% for d in days %}
+      <div class="bar" title="{{ d.n }} alerts"><span>{{ d.n }}</span><i style="height: {{ d.pct }}%"></i><span>{{ d.label }}</span></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h2>Alerts
+    {% if unacked %}<form method="post" action="{{ url_for('ack_all') }}"><button>Dismiss all</button></form>{% endif %}
+  </h2>
+  {% if not alerts %}
+    <p class="empty">{{ 'Nothing yet. Alerts start once learning finishes.' if status.learning else 'No alerts. Everything seen so far matches the baseline.' }}</p>
+  {% else %}
+  <div class="scroll"><table>
+    {% for a in alerts %}
+    <tr class="{{ 'acked' if a.acked }}">
+      <td style="white-space:nowrap"><span class="dot {{ a.severity }}"></span><span class="muted">{{ a.ts|when }}</span></td>
+      <td>{{ a.message }} <a href="{{ url_for('device', mac=a.mac) }}">device</a></td>
+      <td style="text-align:right">
+        {% if not a.acked %}<form method="post" action="{{ url_for('ack', alert_id=a.id) }}"><button>Dismiss</button></form>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Devices</h2>
+  {% if not devices %}
+    <p class="empty">No devices seen yet. Check the sniffer is running and sees LAN traffic.</p>
+  {% else %}
+  <div class="scroll"><table>
+    <tr><th>Name</th><th>Address</th><th>Last seen</th><th>Domains</th><th>Servers</th><th></th></tr>
+    {% for d in devices %}
+    <tr>
+      <td><a href="{{ url_for('device', mac=d.mac) }}">{{ d.label or d.mac }}</a>
+          {% if d.randomised %}<span class="muted" title="Private Wi-Fi address, changes per network">(private address)</span>{% endif %}</td>
+      <td class="mono">{{ d.ip }}</td>
+      <td class="muted">{{ d.last_seen|ago }}</td>
+      <td>{{ d.domains }}</td>
+      <td>{{ d.dests }}</td>
+      <td>{% if d.open_alerts %}<span class="tag">{{ d.open_alerts }} open</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% endif %}
+</section>
+{% endblock %}
